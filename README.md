@@ -1,244 +1,584 @@
 # Instagram Manager
 
-A comprehensive CLI tool for managing Instagram accounts, posts, direct messages, and comments using the Meta Business API.
+<div align="center">
 
-## Features
+**A comprehensive CLI tool for managing Instagram accounts, posts, direct messages, and comments using the Meta Business API.**
 
-- 📸 Post images to Instagram
-- 💬 Manage direct messages
-- 💭 Handle comments
-- 👤 View profile information
-- 🔐 Secure credential management
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Node.js Version](https://img.shields.io/node/v/instagram-manager)](https://nodejs.org/)
+[![Version](https://img.shields.io/github/v/tag/zainhthegreat-bot/instagram-manager)](https://github.com/zainhthegreat-bot/instagram-manager/releases)
 
-## Installation
+[Features](#features) • [Installation](#installation) • [Setup Guide](#setup-guide) • [Usage](#usage) • [Wiki](https://github.com/zainhthegreat-bot/instagram-manager/wiki)
 
-1. Clone the repository:
+</div>
+
+---
+
+## ✨ Features
+
+- 📸 **Post Images**: Upload and publish images to Instagram with captions
+- 💬 **Direct Messages**: Manage and reply to Instagram direct messages
+- 💭 **Comment Management**: View post comments and reply to them
+- 👤 **Profile Info**: Retrieve Instagram business account information
+- 🔐 **Secure Auth**: Secure credential management with validation
+- 🎯 **CLI Interface**: Intuitive command-line interface with colored output
+- 📊 **Batch Operations**: Process multiple items with limit controls
+
+---
+
+## 📋 Requirements
+
+Before installing Instagram Manager, ensure you have:
+
+- **Node.js** 14.0 or higher
+- **npm** (comes with Node.js)
+- A **Meta Developer Account** (free to create)
+- An **Instagram Business Account** or Creator Account
+- Basic familiarity with command-line tools
+
+---
+
+## 🚀 Installation
+
+### Step 1: Clone the Repository
+
 ```bash
 git clone https://github.com/zainhthegreat-bot/instagram-manager.git
 cd instagram-manager
 ```
 
-2. Install dependencies:
+### Step 2: Install Dependencies
+
 ```bash
 npm install
 ```
 
-3. Make the CLI executable (optional):
+### Step 3: Make the CLI Executable (Optional but Recommended)
+
+On Linux/macOS:
 ```bash
 chmod +x index.js
 ```
 
-## Setup
+Or install it globally:
+```bash
+npm link
+```
 
-Before using the tool, you need to set up authentication with your Meta credentials.
+This allows you to run `instagram-manager` from anywhere.
 
-### Get Your Meta Credentials
+---
 
-1. Go to [Meta for Developers](https://developers.facebook.com/)
-2. Create an app with "Instagram Graph API" product
-3. Generate a long-lived access token
-4. Get your Instagram Business Account ID
+## ⚙️ Setup Guide
+
+### Overview
+
+To use Instagram Manager, you need to authenticate with Meta's APIs using your Instagram Business Account. This involves:
+
+1. Creating a Meta Developer app
+2. Configuring Instagram Graph API permissions
+3. Generating a long-lived access token
+4. Getting your Instagram Business Account ID
+
+### Step-by-Step: Getting Your Meta Credentials
+
+#### 1. Create a Meta Developer Account
+
+If you don't have one:
+1. Visit [developers.facebook.com](https://developers.facebook.com/)
+2. Click "Get Started" and sign up with your Facebook account
+3. Complete the verification process
+
+#### 2. Create an App
+
+1. Go to [Meta App Dashboard](https://developers.facebook.com/apps/)
+2. Click **Create App**
+3. Select app type: **Business** (most common for Instagram API usage)
+4. Enter an app name (e.g., "Instagram Manager")
+5. Click **Create App**
+
+#### 3. Add Instagram Graph API Product
+
+1. In your app dashboard, find **Add Product** in the left sidebar
+2. Click **Set Up** next to **Instagram Graph API**
+3. Review and accept the terms
+
+#### 4. Configure Permissions
+
+Your app needs these permissions:
+- `instagram_basic` - Read profile data
+- `instagram_content_publish` - Publish media
+- `pages_read_engagement` - Access page content
+- `pages_manage_engagement` - Manage comments and messages
+
+To add permissions:
+1. Go to **App Review** → **Permissions and Features**
+2. Click **Request** next to each permission
+3. For development/testing, you may get instant approval
+4. For production, submit for review with instructions and screenshots
+
+#### 5. Generate a Long-Lived Access Token
+
+**Method 1: Using Graph API Explorer (Recommended for Testing)**
+
+1. Go to [Graph API Explorer](https://developers.facebook.com/tools/explorer/)
+2. Select your app from the dropdown
+3. In "User or Page", select **Get User Access Token**
+4. Check these permissions:
+   - `instagram_basic`
+   - `instagram_content_publish`
+   - `pages_read_engagement`
+   - `pages_manage_engagement`
+5. Click **Generate Access Token**
+6. Authorize your account
+7. Copy the generated **short-lived token**
+8. Convert it to a long-lived token by visiting this URL (replace `YOUR_TOKEN`):
+   ```
+   https://graph.facebook.com/v18.0/oauth/access_token?grant_type=fb_exchange_token&client_id=YOUR_APP_ID&client_secret=YOUR_APP_SECRET&fb_exchange_token=YOUR_SHORT_LIVED_TOKEN
+   ```
+9. The response contains your **long-lived access token** (valid for 60 days)
+
+**Method 2: Using curl (After Testing)**
+
+```bash
+curl -X POST "https://graph.facebook.com/v18.0/oauth/access_token" \
+  -d "grant_type=fb_exchange_token" \
+  -d "client_id=YOUR_APP_ID" \
+  -d "client_secret=YOUR_APP_SECRET" \
+  -d "fb_exchange_token=YOUR_SHORT_LIVED_TOKEN"
+```
+
+#### 6. Get Your Instagram Business Account ID
+
+1. Use the Graph API Explorer with your long-lived token
+2. Make a GET request to:
+   ```
+   me/accounts?fields=instagram_business_account{id,name,username}
+   ```
+3. Copy the `id` field from the `instagram_business_account` object
+
+Alternatively, use this curl command:
+```bash
+curl -X GET "https://graph.facebook.com/v18.0/me/accounts?fields=instagram_business_account{id,name,username}&access_token=YOUR_LONG_LIVED_TOKEN"
+```
+
+#### 7. Get Your App ID and App Secret
+
+1. In your [App Dashboard](https://developers.facebook.com/apps/)
+2. Go to **Settings** → **Basic**
+3. Copy **App ID** and **App Secret**
 
 ### Initialize Authentication
 
-Run the interactive setup:
+Once you have all credentials, run the interactive setup:
+
 ```bash
 npm start auth setup
 ```
 
-Or if you made it executable:
+Or if you installed globally:
 ```bash
-./index.js auth setup
+instagram-manager auth setup
 ```
 
-You'll be prompted for:
-- Meta Access Token
+You'll be prompted to enter:
+- Meta Access Token (your long-lived token)
 - Instagram Business Account ID
 - App ID
 - App Secret
 
-## Usage
+After setup, two files will be created:
+- `config.json` - Main configuration file
+- `.env` - Environment variables file
+
+**⚠️ Important:** Never commit these files to version control!
+
+### Verify Your Setup
+
+Check if authentication is working:
+```bash
+npm start auth status
+```
+
+If successful, you should see:
+```
+✓ Authentication is valid and ready to use.
+```
+
+---
+
+## 📖 Usage
 
 ### Authentication Commands
 
 #### Setup Authentication
+Interactive setup for your Meta credentials.
+
 ```bash
 npm start auth setup
 ```
 
 #### Check Authentication Status
+Verify your credentials are valid.
+
 ```bash
 npm start auth status
 ```
 
 #### Clear Authentication
+Remove stored credentials (useful for troubleshooting).
+
 ```bash
 npm start auth clear
 ```
 
+---
+
 ### Profile Commands
 
 #### Get Profile Information
+Retrieve your Instagram business account details.
+
 ```bash
 npm start profile info
 ```
 
-Example output:
+**Example output:**
 ```
 📸 Profile Information
 
-Username: your_username
+Username: example_business
 Account Type: BUSINESS
-Followers: 1,234
-Total Posts: 56
+Followers: 5,234
+Total Posts: 156
+
+Bio:
+Welcome to our official business page! 🚀
+Follow us for updates and insights.
 ```
+
+---
 
 ### Post Commands
 
 #### Post an Image
+Upload and publish an image to Instagram.
+
 ```bash
 npm start post --image https://example.com/image.jpg --caption "Hello Instagram!"
 ```
 
-**Important:** The image must be publicly accessible via URL.
+**Parameters:**
+- `--image` (required): Public URL of the image
+- `--caption` (required): Post caption
+
+**Important Notes:**
+- Image must be publicly accessible (no authentication required)
+- Supported formats: JPG, PNG
+- Maximum file size: 30MB
+- Minimum resolution: 1080x1080 pixels (recommended)
+- URL must use HTTPS
+
+**Example:**
+```bash
+npm start post \
+  --image "https://example.com/photos/product-001.jpg" \
+  --caption "🎉 New product launch! Check out our latest addition. #new #launch #innovation"
+```
+
+---
 
 ### Direct Message Commands
 
 #### List Direct Messages
+View all conversation threads.
+
 ```bash
 npm start dm list
 ```
 
-List with a specific limit:
+**Options:**
+- `--limit <number>`: Number of conversations to show (default: 20)
+
+**Example:**
 ```bash
 npm start dm list --limit 10
 ```
 
+**Example output:**
+```
+📬 Direct Messages (10 conversations)
+
+#1 Conversation ID: 17894567890123456
+   Last Activity: 2/5/2025, 3:45:00 PM
+   Unread: 2
+   Last Message: Hi, I'm interested in your product!
+
+#2 Conversation ID: 17894567890123457
+   Last Activity: 2/5/2025, 2:30:00 PM
+   Unread: 0
+   Last Message: Thanks for the quick response!
+```
+
 #### Reply to a Direct Message
+Send a reply to an existing conversation.
+
 ```bash
 npm start dm reply <CONVERSATION_ID> Your reply message here
 ```
 
-Example:
+**Example:**
 ```bash
-npm start dm reply 1234567890 Thanks for reaching out!
+npm start dm reply 17894567890123456 "Thanks for reaching out! How can I help you today?"
 ```
+
+**Tips:**
+- Use the conversation ID from `dm list` output
+- Messages are sent immediately
+- You can use emojis and hashtags
+
+---
 
 ### Comment Commands
 
 #### List Comments on a Post
+View all comments on a specific post.
+
 ```bash
 npm start comments list <POST_ID>
 ```
 
-With a specific limit:
+**Options:**
+- `--limit <number>`: Number of comments to show (default: 25)
+
+**Example:**
 ```bash
-npm start comments list 1234567890 --limit 50
+npm start comments list 17901234567890123 --limit 50
+```
+
+**Example output:**
+```
+💬 Comments on Post 17901234567890123
+
+#1 Comment ID: 17912345678901234
+   Amazing product! Love it ❤️
+   by @user123 • 2/5/2025, 10:30:00 AM
+
+#2 Comment ID: 17912345678901235
+   Where can I buy this?
+   by @buyer456 • 2/5/2025, 11:15:00 AM
 ```
 
 #### Reply to a Comment
+Reply to a specific comment on a post.
+
 ```bash
 npm start comments reply <COMMENT_ID> Your reply here
 ```
 
-Example:
+**Example:**
 ```bash
-npm start comments reply 1234567890 Thanks for the comment!
+npm start comments reply 17912345678901235 "You can purchase it on our website! Link in bio. 🛒"
 ```
 
-## Configuration Files
+**Tips:**
+- Use the comment ID from `comments list` output
+- Reply notifications are sent to the commenter
+- You can tag other users with @username
+
+---
+
+## 📁 Configuration Files
 
 The tool creates two configuration files after setup:
 
-1. **config.json** - Main configuration file
-2. **.env** - Environment variables file
+### config.json
+Main configuration file in JSON format.
 
-### Example Configuration
-
-**config.example.json** (template):
+**Example:**
 ```json
 {
-  "access_token": "YOUR_META_ACCESS_TOKEN",
-  "instagram_business_account_id": "YOUR_IG_ID",
-  "app_id": "YOUR_APP_ID",
-  "app_secret": "YOUR_APP_SECRET"
+  "access_token": "EAA...",
+  "instagram_business_account_id": "17841401234567890",
+  "app_id": "1234567890123456",
+  "app_secret": "abcdef1234567890abcdef1234567890"
 }
 ```
 
-**.env.example** (template):
+### .env
+Environment variables file.
+
+**Example:**
 ```env
-INSTAGRAM_ACCESS_TOKEN=YOUR_META_ACCESS_TOKEN
-INSTAGRAM_BUSINESS_ACCOUNT_ID=YOUR_IG_ID
-INSTAGRAM_APP_ID=YOUR_APP_ID
-INSTAGRAM_APP_SECRET=YOUR_APP_SECRET
+INSTAGRAM_ACCESS_TOKEN=EAA...
+INSTAGRAM_BUSINESS_ACCOUNT_ID=17841401234567890
+INSTAGRAM_APP_ID=1234567890123456
+INSTAGRAM_APP_SECRET=abcdef1234567890abcdef1234567890
 ```
 
-## Project Structure
+### Template Files
+
+The repository includes template files:
+- `config.example.json` - Configuration template
+- `.env.example` - Environment variables template
+
+**Security Note:** Never commit `config.json` or `.env` to version control. These files are already in `.gitignore`.
+
+---
+
+## 🗂️ Project Structure
 
 ```
 instagram-manager/
-├── index.js                 # Main CLI entry point
-├── package.json             # Node.js dependencies
-├── lib/                    # Core modules
-│   ├── auth.js            # Authentication handling
-│   ├── instagram.js       # Instagram API client
-│   └── messenger.js       # Messenger/DM API client
-├── config.example.json     # Configuration template
-├── .env.example            # Environment variables template
-└── README.md               # This file
+├── index.js                      # Main CLI entry point
+├── package.json                  # Node.js dependencies
+├── lib/                         # Core modules
+│   ├── auth.js                 # Authentication handling
+│   ├── instagram.js            # Instagram API client
+│   └── messenger.js            # Messenger/DM API client
+├── config.example.json          # Configuration template
+├── .env.example                 # Environment variables template
+├── .gitignore                   # Git ignore rules
+├── README.md                    # This file
+├── CHANGELOG.md                 # Version history
+├── CONTRIBUTING.md              # Contribution guidelines
+└── LICENSE                      # MIT License
 ```
 
-## API Modules
+---
+
+## 🧩 API Modules
 
 ### lib/instagram.js
 Handles Instagram Graph API operations:
-- Profile information
-- Image posting
-- Comment management
-- Media retrieval
+- **Profile Information**: Fetch account details, followers, posts
+- **Image Posting**: Create containers and publish media
+- **Comment Management**: List comments and post replies
+- **Media Retrieval**: Get recent posts and media data
 
 ### lib/messenger.js
 Handles Instagram Direct Messaging:
-- List conversations
-- Fetch messages
-- Send replies
-- Thread management
+- **List Conversations**: Get all conversation threads
+- **Fetch Messages**: Retrieve messages from a conversation
+- **Send Replies**: Reply to messages in conversations
+- **Thread Management**: Track unread counts and activity
 
 ### lib/auth.js
 Manages authentication:
-- Interactive setup
-- Configuration validation
-- Token storage
+- **Interactive Setup**: Prompt-based credential collection
+- **Configuration Validation**: Verify credentials are valid
+- **Token Storage**: Secure storage in config files
+- **Auth Clearing**: Remove credentials for reset
 
-## Security Notes
+---
 
-- Never commit `config.json` or `.env` to version control
-- Use long-lived access tokens (valid for 60 days)
-- Keep your App Secret secure
-- Rotate access tokens regularly
-
-## Troubleshooting
+## 🔧 Troubleshooting
 
 ### "No configuration found" Error
-Run `npm start auth setup` to configure your credentials.
+**Problem:** The tool can't find your credentials.
+
+**Solution:**
+```bash
+npm start auth setup
+```
+Follow the prompts to enter your Meta credentials.
 
 ### "Authentication error" Error
-Your credentials may be invalid or expired. Run `npm start auth clear` then `npm start auth setup` again.
+**Problem:** Your credentials are invalid or expired.
+
+**Solution:**
+1. Check if your access token expired (long-lived tokens last 60 days)
+2. Generate a new access token using the instructions above
+3. Run:
+   ```bash
+   npm start auth clear
+   npm start auth setup
+   ```
 
 ### Image Posting Fails
-Ensure the image URL is publicly accessible. The Instagram API doesn't support local file uploads directly.
+**Problem:** Unable to post images to Instagram.
 
-## Requirements
+**Solutions:**
+- ✅ Ensure the image URL is publicly accessible (no auth required)
+- ✅ Check the image format (JPG or PNG only)
+- ✅ Verify file size is under 30MB
+- ✅ Confirm minimum resolution (1080x1080 recommended)
+- ✅ Make sure URL uses HTTPS
+- ✅ Test the URL in a browser to ensure it loads
 
-- Node.js 14 or higher
-- Meta Developer Account
-- Instagram Business Account
-- Valid Access Token
+### Cannot Get Instagram Business Account ID
+**Problem:** The Graph API doesn't return your Instagram account.
 
-## License
+**Solutions:**
+- ✅ Ensure your Instagram account is a Business or Creator account
+- ✅ Link your Instagram account to a Facebook Page
+- ✅ Check that you have `instagram_basic` permission
+- ✅ Verify your access token is valid
 
-ISC
+### Rate Limit Errors
+**Problem:** Getting "429 Too Many Requests" errors.
 
-## Contributing
+**Solutions:**
+- ✅ Slow down your requests (add delays between calls)
+- ✅ Check Meta's API rate limits for your usage tier
+- ✅ Implement retry logic with exponential backoff
+- ✅ Consider using a batch API for multiple operations
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+### Permission Errors
+**Problem:** "Permission denied" or "Insufficient permissions".
+
+**Solutions:**
+- ✅ Verify all required permissions are granted
+- ✅ Check if permissions need app review
+- ✅ Ensure your account is authorized for the app
+- ✅ Review Meta's permission documentation
+
+---
+
+## 🤝 Contributing
+
+We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+
+### Quick Start for Contributors
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Make your changes
+4. Add tests if applicable
+5. Commit your changes (`git commit -m 'Add amazing feature'`)
+6. Push to the branch (`git push origin feature/amazing-feature`)
+7. Open a Pull Request
+
+---
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+---
+
+## 📚 Additional Resources
+
+- [Instagram Graph API Documentation](https://developers.facebook.com/docs/instagram-api/)
+- [Meta for Developers](https://developers.facebook.com/)
+- [Instagram Business Account Setup](https://help.instagram.com/502981925147549)
+- [Graph API Explorer](https://developers.facebook.com/tools/explorer/)
+- [GitHub Wiki](https://github.com/zainhthegreat-bot/instagram-manager/wiki)
+
+---
+
+## 🆘 Support
+
+- 📖 Check the [GitHub Wiki](https://github.com/zainhthegreat-bot/instagram-manager/wiki)
+- 🐛 Report bugs via [GitHub Issues](https://github.com/zainhthegreat-bot/instagram-manager/issues)
+- 💡 Request features via [GitHub Issues](https://github.com/zainhthegreat-bot/instagram-manager/issues)
+
+---
+
+<div align="center">
+
+Made with ❤️ by [zainhthegreat-bot](https://github.com/zainhthegreat-bot)
+
+[⬆ Back to Top](#instagram-manager)
+
+</div>

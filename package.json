@@ -21,9 +21,19 @@
     "type": "git",
     "url": "git+https://github.com/zainhthegreat-bot/instagram-manager.git"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "keywords": [
+    "instagram",
+    "cli",
+    "social-media",
+    "instagram-api",
+    "instagram-manager",
+    "messenger",
+    "direct-messages",
+    "comments",
+    "social-media-management"
+  ],
+  "author": "zainhthegreat-bot",
+  "license": "MIT",
   "type": "commonjs",
   "bugs": {
     "url": "https://github.com/zainhthegreat-bot/instagram-manager/issues"
