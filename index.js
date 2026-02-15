@@ -294,6 +294,89 @@ profileCmd
     }
   });
 
+// ==================== WEBHOOK COMMANDS ====================
+
+const webhookCmd = program.command('webhook');
+webhookCmd.description('Webhook server commands');
+
+webhookCmd
+  .command('start')
+  .description('Start webhook server to receive real-time messages')
+  .option('--port <number>', 'Port to run webhook server on', '3000')
+  .action(async (options) => {
+    const auth = new AuthHandler();
+    if (!auth.hasConfig()) {
+      console.error(chalk.red('No configuration found. Run "auth setup" first.'));
+      process.exit(1);
+    }
+
+    const { valid, error, config } = await auth.validateConfig();
+    if (!valid) {
+      console.error(chalk.red('Authentication error:'), error);
+      process.exit(1);
+    }
+
+    try {
+      const WebhookServer = require('./lib/webhook');
+      const webhookServer = new WebhookServer(config);
+      await webhookServer.start(parseInt(options.port));
+      console.log(chalk.green('\n✓ Webhook server is running!\n'));
+      console.log(chalk.yellow('Next steps:'));
+      console.log(chalk.gray('1. Set up ngrok: ngrok http ' + options.port));
+      console.log(chalk.gray('2. Configure webhook in Meta Developer Portal:'));
+      console.log(chalk.gray('   - Webhook URL: https://YOUR_NGROK_URL/webhook'));
+      console.log(chalk.gray('   - Verify Token: meta_webhook_secret_2026'));
+      console.log(chalk.gray('3. Subscribe to webhook events (messages, comments)\n'));
+
+      // Handle graceful shutdown
+      process.on('SIGINT', async () => {
+        console.log(chalk.yellow('\n\n🛑 Shutting down webhook server...'));
+        await webhookServer.stop();
+        process.exit(0);
+      });
+
+      process.on('SIGTERM', async () => {
+        console.log(chalk.yellow('\n\n🛑 Shutting down webhook server...'));
+        await webhookServer.stop();
+        process.exit(0);
+      });
+
+    } catch (error) {
+      console.error(chalk.red('Error starting webhook server:'), error.message);
+      process.exit(1);
+    }
+  });
+
+webhookCmd
+  .command('info')
+  .description('Show webhook setup instructions')
+  .action(() => {
+    console.log(chalk.bold.blue('\n📋 Webhook Setup Instructions\n'));
+
+    console.log(chalk.bold('1. Start the webhook server locally:'));
+    console.log(chalk.gray('   npm start webhook start\n'));
+
+    console.log(chalk.bold('2. Expose localhost publicly using ngrok:'));
+    console.log(chalk.gray('   ngrok http 3000\n'));
+
+    console.log(chalk.bold('3. Configure webhook in Meta Developer Portal:'));
+    console.log(chalk.gray('   Go to: https://developers.facebook.com/apps/YOUR_APP_ID/messenger/settings'));
+    console.log(chalk.gray('   or: https://developers.facebook.com/apps/YOUR_APP_ID/instagram-messaging/settings\n'));
+
+    console.log(chalk.bold('4. Add webhook callback URL:'));
+    console.log(chalk.gray('   URL: https://YOUR_NGROK_ID.ngrok-free.app/webhook'));
+    console.log(chalk.gray('   Verify Token: meta_webhook_secret_2026\n'));
+
+    console.log(chalk.bold('5. Subscribe to events:'));
+    console.log(chalk.gray('   Instagram: messages, comments, mentions'));
+    console.log(chalk.gray('   Facebook: messages, messaging_postbacks\n'));
+
+    console.log(chalk.bold('6. Test the webhook:'));
+    console.log(chalk.gray('   Send a test message from your Instagram/Facebook\n'));
+
+    console.log(chalk.yellow('\n💡 Tip: For production, use a real server (not ngrok)\n'));
+  });
+
 // ==================== PARSE COMMANDS ====================
 
 program.parse(process.argv);
