@@ -23,6 +23,7 @@
 - 🔐 **Secure Auth**: Secure credential management with validation
 - 🎯 **CLI Interface**: Intuitive command-line interface with colored output
 - 📊 **Batch Operations**: Process multiple items with limit controls
+- 🔔 **Real-time Webhooks**: Receive instant message and comment notifications via webhooks
 
 ---
 
@@ -431,17 +432,24 @@ The repository includes template files:
 ```
 instagram-manager/
 ├── index.js                      # Main CLI entry point
+├── webhook.js                    # Standalone webhook server
 ├── package.json                  # Node.js dependencies
 ├── lib/                         # Core modules
 │   ├── auth.js                 # Authentication handling
 │   ├── instagram.js            # Instagram API client
-│   └── messenger.js            # Messenger/DM API client
+│   ├── messenger.js            # Messenger/DM API client
+│   └── webhook.js              # Express webhook server
+├── api/                         # Serverless functions (Vercel)
+│   └── webhook.js              # Vercel serverless webhook
 ├── config.example.json          # Configuration template
 ├── .env.example                 # Environment variables template
+├── vercel.json                  # Vercel deployment config
 ├── .gitignore                   # Git ignore rules
 ├── README.md                    # This file
 ├── CHANGELOG.md                 # Version history
 ├── CONTRIBUTING.md              # Contribution guidelines
+├── DEPLOYMENT.md                # Vercel deployment guide
+├── WEBHOOK_SETUP.md             # Local webhook setup guide
 └── LICENSE                      # MIT License
 ```
 
@@ -532,6 +540,87 @@ Follow the prompts to enter your Meta credentials.
 - ✅ Check if permissions need app review
 - ✅ Ensure your account is authorized for the app
 - ✅ Review Meta's permission documentation
+
+---
+
+## 🔔 Webhook Server
+
+Receive real-time messages and comments from Instagram and Facebook using the built-in webhook server.
+
+### Quick Start (Vercel - Recommended)
+
+Deploy to Vercel for free hosting with automatic HTTPS:
+
+1. **Deploy to Vercel:**
+   ```bash
+   npm install -g vercel
+   vercel login
+   vercel
+   ```
+
+2. **Configure Environment Variables** in Vercel Dashboard:
+   - `WEBHOOK_VERIFY_TOKEN` = `meta_webhook_secret_2026`
+
+3. **Update Meta Developer Portal** with your Vercel URL:
+   - Webhook URL: `https://your-project.vercel.app/webhook`
+   - Verify Token: `meta_webhook_secret_2026`
+
+See [DEPLOYMENT.md](DEPLOYMENT.md) for complete Vercel setup instructions.
+
+### Local Webhook Server
+
+Run the webhook server locally (requires ngrok for public access):
+
+```bash
+# Start webhook server
+npm start webhook start
+
+# Or use standalone
+npm run webhook
+
+# Show setup instructions
+npm start webhook info
+```
+
+### Webhook Commands
+
+```bash
+# Start webhook server (default port 3000)
+npm start webhook start
+
+# Start on custom port
+npm start webhook start --port 8080
+
+# Show webhook setup info
+npm start webhook info
+```
+
+### Webhook Events
+
+**Instagram:**
+- ✅ Messages (Direct Messages)
+- ✅ Comments on posts
+- ✅ Mentions in comments
+
+**Facebook Messenger:**
+- ✅ Text messages
+- ✅ Postback events
+
+### Customizing Webhooks
+
+Edit `api/webhook.js` (Vercel) or `webhook.js` (local) to add custom logic:
+
+```javascript
+// Example: Auto-reply to messages
+if (messageData.text?.includes('help')) {
+  // Send help response
+}
+```
+
+### Documentation
+
+- [DEPLOYMENT.md](DEPLOYMENT.md) - Complete Vercel deployment guide
+- [WEBHOOK_SETUP.md](WEBHOOK_SETUP.md) - Local webhook setup with ngrok
 
 ---
 
